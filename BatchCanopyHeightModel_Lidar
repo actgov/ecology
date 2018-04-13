@@ -1,0 +1,43 @@
+PRO batchCanopy2
+
+  e = ENVI(/HEADLESS)
+  search_dir = 'F:\FilteredLidar4ppm\'
+  file_array = file_search(search_dir + '*.las', count=num_file)
+  
+  for i=0, N_ELEMENTS(file_array) -1 do begin
+    file=file_array[i]
+    print, num_file
+        
+  TASK = ENVITask('PointCloudFeatureExtraction')
+  SpatialRef = ENVIPointCloudSpatialRef(COORD_SYS_CODE = 28355)
+  
+  
+  TASK.DEM_GENERATE = 1
+  TASK.DEM_FILTER_LOWER_POINTS = 10
+  TASK.DSM_GENERATE = 1
+  TASK.DSM_USE_POWERLINES_POINTS = 0
+  TASK.GENERAL_CLIP_MIN_HEIGHT = 400
+  TASK.GENERAL_CLIP_MAX_HEIGHT = 2400
+  TASK.DSM_FORMAT = "geotiff"
+  TASK.DEM_FORMAT = "geotiff"
+  TASK.DEM_FILTER_DATABASE_EDGES = 0
+  TASK.DEM_NEAR_TERRAIN_CLASSIFICATION = 20
+  TASK.SAVE_PARAMETERS = 0
+  TASK.DSM_GRID_RESOLUTION = 100
+  TASK.SpatialRef = ENVIPointCloudSpatialRef(COORD_SYS_CODE = 28355)
+
+    ; Open a las file
+    pointcloud = e.OpenPointCloud(file_array, PROJECT_URI = 'F:\CombinedPC\LAS_4ppm\', /CLOSE_PREVIOUS)
+    ; Define inputs
+    Task.INPUT_POINT_CLOUD = pointcloud
+    TASK.SpatialRef = ENVIPointCloudSpatialRef(COORD_SYS_CODE = 28355)
+
+  Result = TASK.Validate(VALIDATION_EXCEPTION=msg)
+  print, 'Executing Point Cloud Feature Extraction Task'
+  
+  TASK.Execute
+  pointcloud.Close
+  print, 'done'
+  
+  ENDFOR
+  END
